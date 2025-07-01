@@ -1,0 +1,89 @@
+import { Hono } from 'hono';
+import { PrismaClient, User } from '@prisma/client';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto'
+import UAParser from 'ua-parser-js'
+import { getConnInfo } from 'hono/cloudflare-workers' // atau 'hono/node-server' tergantung environment
+import { getClientIp } from '../../helper/getclientip';
+
+
+const prisma = new PrismaClient();
+const route = new Hono();
+
+route.post('/login', async (c) => {
+    const body: {
+        emailOrUsername: string
+        password: string
+        rememberme: number
+        deviceid?: string
+    } = await c.req.json()
+
+    const { emailOrUsername, password, rememberme, deviceid } = body
+
+  // Cari user berdasarkan email atau username
+  console.log(emailOrUsername, password, deviceid )
+    const user = await prisma.user.findFirst({
+        where: {
+        OR: [
+            { email: emailOrUsername },
+            { username: emailOrUsername }
+        ]
+        }
+    })
+
+    
+    if (! user) {
+      console.log("Password/User slah" )
+
+        return c.json({ success: false, error: 'Password atau Email/Username salah' }, 404)
+    }
+
+    // Cek password
+    const isValid = await bcrypt.compare(password, user.password)
+
+    if (!isValid) {
+      console.log("Password/User slah 2" )
+        return c.json({ success: false, error: 'Password atau Email/Username salah' }, 401)
+    }
+
+    // Buat JWT token
+    const secret = process.env.JWT_SECRET || 'JWT-k4mb1ngC0klat'
+    const token = jwt.sign(
+        { userId: user.id, email: user.email, role: user.userrole }, // payload
+        secret,
+        { expiresIn: '30m' }
+    )
+
+    const refreshToken = crypto.randomBytes(64).toString('hex');
+    const refreshTokenExpiry = new Date(Date.now() + ((rememberme) ? 7 : 1) * 24 * 60 * 60 * 1000)
+
+    const userAgent = c.req.header('User-Agent') || ''    
+
+//    const parser = new UAParser(userAgent) // Masih eeror
+//    const ua = parser.getResult()
+
+
+    const conn = getConnInfo(c)
+    const ipAddress = getClientIp(c);
+
+    try {
+        const users = await prisma.tbsystoken.create({
+            data: { userid: user.id, refreshtoken: refreshToken, 
+                accesstoken: token, expiredate: refreshTokenExpiry,
+                companycode: '000', userrole: user.userrole, 
+                isexpired: 0, ipaddress: ipAddress,
+                useragent: userAgent, deviceid: deviceid ?? "not sent"},
+        })
+    } catch (err) {
+        console.error('Terjadi kesalahan saat insert token:', err)
+        return c.json({ success: false, error: 'System gagal membuat token, silahkan coba lagi' }, 400)
+    }
+      console.log("Login sukses" )
+
+    // Login berhasil
+    return c.json({ success: true, message: 'Login berhasil',
+        user: { id: user.id, username: user.username, email: user.email, role: user.userrole}, token: token, refreshtoken: refreshToken}, 200)
+})
+
+export default route

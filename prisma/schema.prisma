@@ -1,0 +1,71 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique @db.VarChar(32)
+  username        String    @unique @db.VarChar(32)
+  password        String    @db.VarChar(64)
+  termsagrement   Int       @default(1)
+  userrole        String    @default("User") @db.VarChar(20)
+  accesstoken     String?   @db.VarChar(2048)
+  refreshtoken    String?   @db.VarChar(2048)
+  tokenexpiredate DateTime? @db.Timestamp(6)
+}
+
+model tbsystoken {
+  accesstoken  String?   @db.VarChar(2048)
+  companycode  String?   @db.VarChar(32)
+  email        String?   @db.VarChar(320)
+  expiredate   DateTime? @db.Timestamp(6)
+  id           Int       @id @default(autoincrement())
+  isexpired    Int?      @default(0) @db.SmallInt
+  refreshtoken String?   @db.VarChar(1024)
+  userrole     String?   @db.VarChar(32)
+  ipaddress    String?   @db.VarChar
+  useragent    String?   @db.VarChar
+  deviceid     String?   @db.VarChar
+  userid       String?   @db.VarChar(64)
+}
+
+model users {
+  UserId             String    @id @db.VarChar(36)
+  UserName           String    @unique @db.VarChar(32)
+  Email              String    @unique @db.VarChar(100)
+  Password           String    @db.VarChar(64)
+  FirstName          String?   @db.VarChar(32)
+  LastName           String?   @db.VarChar(32)
+  DateOfBirth        DateTime? @db.Date
+  PhoneNumber        String?   @db.VarChar(20)
+  Address            String?   @db.VarChar(40)
+  Address2           String?   @db.VarChar(40)
+  Province           String?   @db.VarChar(20)
+  City               String?   @db.VarChar(20)
+  ZipCode            String?   @db.VarChar(6)
+  Avatar200x200      String?   @db.VarChar(255)
+  BaseLocale         String?   @default("id-ID") @db.VarChar(10)
+  BaseLanguage       String?   @default("id-ID") @db.VarChar(10)
+  IsCashier          Int?      @default(0) @db.SmallInt
+  IsRoot             Int?      @default(1) @db.SmallInt
+  UserRole           String?   @db.VarChar(20)
+  MustChangePassword Int?      @default(0) @db.SmallInt
+  RootUserName       String?   @db.VarChar(32)
+  ParentUserName     String?   @db.VarChar(32)
+  IsEmailConfirmed   Int?      @default(0) @db.SmallInt
+  IsPhoneConfirmed   Int?      @default(0) @db.SmallInt
+  IsActive           Int?      @default(1) @db.SmallInt
+  LastVisitedURL     String?   @db.VarChar(255)
+  LastLoginTime      DateTime? @db.Timestamp(6)
+  LastLogoutTime     DateTime? @db.Timestamp(6)
+  MembershipId       String?   @default("000") @db.VarChar(3)
+  TermsAgrement      Int       @default(1) 
+  CreatedAt          DateTime? @default(now()) @db.Timestamp(6)
+  UpdatedAt          DateTime? @db.Timestamp(6)
+}
