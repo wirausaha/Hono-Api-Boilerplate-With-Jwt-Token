@@ -50,3 +50,24 @@ export async function getUserWithPagination(params: {
     data: users
   }
 }
+
+export async function getUserRole(userid: string) {
+    try {
+        return prisma.users.findFirst({            
+            where: { UserId: userid },
+            select: { UserRole: true }
+        })
+    }  catch (err) {
+        return null;
+    }
+}
+
+export async function UsernameOrEmailExists(username: string, email: string) {
+    try {
+        return await prisma.users.count({
+            where: { OR: [{ UserName: username }, { Email: email }] }        
+        })
+    } catch (err) {
+        return null;
+    }  
+}

@@ -8,18 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id              String    @id @default(uuid())
-  email           String    @unique @db.VarChar(32)
-  username        String    @unique @db.VarChar(32)
-  password        String    @db.VarChar(64)
-  termsagrement   Int       @default(1)
-  userrole        String    @default("User") @db.VarChar(20)
-  accesstoken     String?   @db.VarChar(2048)
-  refreshtoken    String?   @db.VarChar(2048)
-  tokenexpiredate DateTime? @db.Timestamp(6)
-}
-
 model tbsystoken {
   accesstoken  String?   @db.VarChar(2048)
   companycode  String?   @db.VarChar(32)

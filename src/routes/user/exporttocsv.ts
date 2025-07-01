@@ -11,6 +11,7 @@ export const route = new Hono();
 route.get('/user/exporttocsv', verifyAccessToken, async (c) => {
     const { filter, start, length } = c.req.query()
 
+    // saya belum dapat cara redis yang tepat karena belum implementasi dengan real data :) 
     const result = await getUserWithPagination({
         draw: 1,
         start: Number(start ?? 0),

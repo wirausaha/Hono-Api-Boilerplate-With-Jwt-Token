@@ -17,3 +17,25 @@ export const userDtos = {
   IsEmailConfirmed: true,
   IsPhoneConfirmed: true
 }
+
+export type userInputDto = {
+  UserId: string,
+  UserName: string,
+  Password: string,
+  Email: string,
+  PhoneNumber?: string,
+  FirstName?: string,
+  LastName?: string,
+  DateOfBirth?: string,
+  Address?: string,
+  Address2?: string,
+  Province?: string,
+  City?: string,
+  ZipCode?: string,
+  Avatar200x200?: string,
+  UserRole: string,
+  IsActive: number,
+  IsEmailConfirmed: number,
+  IsPhoneConfirmed: number, 
+  AvatarFile: File
+}  

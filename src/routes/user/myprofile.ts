@@ -1,14 +1,21 @@
+import { Redis } from 'ioredis';
 import { Hono } from 'hono'
 import { verifyAccessToken } from '../../middleware/middlewareverifytoken'
 import { getUserProfile } from '../../services/userservices';
-import {keysToLowercase} from '../../helper/smallkey'
+import { keysToLowercase} from '../../helper/smallkey'
+import { getOrCache } from '../../utils/redisutil'
+
 
 export const myProfile = new Hono();
 export const userProfile = new Hono();
 
 myProfile.get('/user/myprofile', verifyAccessToken, async (c) => {
   const payload = c.get('jwtPayload')
-  const user = await getUserProfile(payload.userId)
+  const userId = payload.userId ?? "";
+
+  // Test pakai redis
+  const cacheKey = `profile:${userId}`
+  const user = await getOrCache(cacheKey, 300, () => getUserProfile(userId))
 
   return user
     ? c.json({ success: true, user: keysToLowercase(user) })
@@ -20,14 +27,18 @@ userProfile.post('/user/userprofile', verifyAccessToken, async (c) => {
   const body: { username: string } = await c.req.json()
   const { username } = body
   const payload = c.get('jwtPayload')
-  const myid = await getUserProfile(payload.userId)
+  const myUserId = payload.userId;
 
-  if (!myid) {
+  // coba pakai redis
+  const myid = await getOrCache(`profile:${myUserId}`, 300, () => getUserProfile(myUserId))
+
+  if (! myid) {
     return c.json({ success: false, message: "Data anda tidak ditemukan" }, 404)
   }
 
   if (myid.UserRole === "Superuser" || myid.UserRole === "Administrator") {
-    const user = await getUserProfile(username)
+    // coba pakai redis
+    const user = await getOrCache(`profile:${username}`, 300, () => getUserProfile(username))
     return user
       ? c.json({ success: true, user: keysToLowercase(user) })
       : c.json({ success: false, message: "Data pemakai tidak ditemukan" }, 404)

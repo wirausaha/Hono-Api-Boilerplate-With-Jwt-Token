@@ -4,19 +4,19 @@ import prisma from '../../lib/prisma-client'
 
 const route = new Hono()
 
-route.post('/user/userexists', verifyAccessToken, async (c) => {
+route.post('/user/emailexists', verifyAccessToken, async (c) => {
     const body: {
-        username: string,
+        email: string,
     } = await c.req.json()
-    const { username } = body
+    const { email } = body
     
     try {
         const userCount = await prisma.users.count({
-            where: { UserName: username }        
+            where: { Email: email }        
         })
-        return c.json({ success: true, userexists : userCount }, 200)
+        return c.json({ success: true, emailexist: userCount }, 200)
     } catch (err) {
-        console.error('Error /user/userexist:', err)
+        console.error('Error /user/emailexist:', err)
         return c.json({ success: false, error: 'Internal server error : userexist()' }, 500)
     }
     

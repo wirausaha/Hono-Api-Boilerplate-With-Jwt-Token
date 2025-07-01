@@ -5,10 +5,14 @@ import { serve } from "@hono/node-server";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { type JwtVariables } from "hono/jwt";
+import { serveStatic } from '@hono/node-server/serve-static'
+
 
 type Variables = JwtVariables;
 
 const app = new OpenAPIHono<{ Variables: Variables }>();
+
+app.use('/images/*', serveStatic({ root: './public/images' })) // arahkan reques /images ke ./public/images
 
 // JWT setup
 const secret = process.env.JWT_SECRET;
@@ -35,51 +39,11 @@ app.doc("/openapi", {
 const port = 3000;
 console.log(`Server is running on http://localhost:${port}`);
 
-import dbTestRoute from './routes/sample/db-test'
-app.route('/api', dbTestRoute)
+import authRoutes from './routes/auth'
+app.route('/api', userRoutes)
 
-import userRoute from './routes/sample/user'
-app.route('/api', userRoute)
-
-import cacheRoute from './routes/sample/cache'
-app.route('/api', cacheRoute)
-
-import registerRoute from './routes/auth/register'
-app.route('/api', registerRoute)
-
-import loginRoute from './routes/auth/login'
-app.route('/api', loginRoute)
-
-import refreshtokenRoute from '../src/routes/auth/handlerefreshtoken'
-app.route('/api', refreshtokenRoute)
-
-import { handleLogout } from './routes/auth/logout'
-app.post('/api/logout', handleLogout)
-
-
-import { verifyAccessToken } from '../src/middleware/middlewareverifytoken'
-import { handleLogoutAllSessions } from './routes/auth/logoutallsession'
-
-app.post('/api/logout-all-session', verifyAccessToken, handleLogoutAllSessions)
-
-import userCount from '../src/routes/user/count'
-app.route('/api', userCount)
-
-import usernameExist from '../src/routes/user/userexist'
-app.route('/api', usernameExist)
-
-import getAvatar from '../src/routes/user/useravatar'
-app.route('/api', getAvatar)
-
-import { myProfile, userProfile} from '../src/routes/user/myprofile'
-app.route('/api', myProfile)
-app.route('/api', userProfile)
-
-import exportToCsv from '../src/routes/user/exporttocsv'
-app.route('/api', exportToCsv)
-
-import exportToXls from '../src/routes/user/exporttoxlsx'
-app.route('/api', exportToXls)
+import userRoutes from './routes/user'
+app.route('/api', userRoutes)
 
 serve({ fetch: app.fetch, port, hostname: "0.0.0.0" });
 
