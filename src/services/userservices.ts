@@ -44,9 +44,9 @@ export async function getUserWithPagination(params: {
   ])
 
   return {
-    draw,
-    recordsTotal,
-    recordsFiltered,
+    draw: draw,
+    recordsTotal: recordsTotal,
+    recordsFiltered: recordsFiltered,
     data: users
   }
 }

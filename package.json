@@ -18,6 +18,7 @@
     "ioredis": "^5.6.1",
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
     "pino": "^9.6.0",
     "redis": "^4.7.0",
     "ua-parser-js": "^2.0.4",

@@ -6,13 +6,15 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import { type JwtVariables } from "hono/jwt";
 import { serveStatic } from '@hono/node-server/serve-static'
-
+//import { serveStatic } from 'hono/bun' // atau 'hono/no
 
 type Variables = JwtVariables;
 
 const app = new OpenAPIHono<{ Variables: Variables }>();
 
-app.use('/images/*', serveStatic({ root: './public/images' })) // arahkan reques /images ke ./public/images
+app.use('/images/*', serveStatic({ root: './public' }))
+
+//app.use('/images/*', serveStatic({ root: './public/images' })) // arahkan reques /images ke ./public/images
 
 // JWT setup
 const secret = process.env.JWT_SECRET;
@@ -40,10 +42,11 @@ const port = 3000;
 console.log(`Server is running on http://localhost:${port}`);
 
 import authRoutes from './routes/auth'
-app.route('/api', userRoutes)
+app.route('/api/auth', authRoutes)
 
 import userRoutes from './routes/user'
 app.route('/api', userRoutes)
+
 
 serve({ fetch: app.fetch, port, hostname: "0.0.0.0" });
 

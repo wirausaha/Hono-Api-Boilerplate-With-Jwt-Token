@@ -1,6 +1,12 @@
 import Redis from 'ioredis'
-const redis = new Redis()
 
+const redis = new Redis({
+  host: 'localhost',
+  port: 6379,
+  password: 'redispass123', // ganti dengan password Redis kamu
+});
+
+//redispass123
 export async function getOrCache<T>(
   key: string,
   ttl: number,

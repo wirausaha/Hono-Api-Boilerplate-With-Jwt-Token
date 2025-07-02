@@ -11,22 +11,22 @@ const route = new Hono();
 
 route.post('/login', async (c) => {
     const body: {
-        emailOrUsername: string
+        username: string
         password: string
         rememberme: number
         deviceid?: string
     } = await c.req.json()
 
-    const { emailOrUsername, password, rememberme, deviceid } = body
+    const { username, password, rememberme, deviceid } = body
 
     // Cari user berdasarkan email atau username
-    console.log("Username : ", emailOrUsername, " Password : ", password, " Device : ", deviceid )
+    console.log("Username : ", username, " Password : ", password, " Device : ", deviceid )
 
     const user = await prisma.users.findFirst({
         where: {
         OR: [
-            { Email: emailOrUsername },
-            { UserName: emailOrUsername }
+            { Email: username },
+            { UserName: username }
         ]
         }
     })

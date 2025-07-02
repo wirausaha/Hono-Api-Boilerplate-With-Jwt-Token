@@ -5,7 +5,7 @@ import {keysToLowercase} from '../../helper/smallkey'
 
 export const route = new Hono();
 
-route.get('/user/myrole', verifyAccessToken, async (c) => {
+route.get('/user/getmyrole', verifyAccessToken, async (c) => {
   const payload = c.get('jwtPayload')
   const user = await getUserRole(payload.userId)
 

@@ -1,12 +1,9 @@
-const isValidDateFormat = (date: string) =>
-  /^\d{4}-\d{2}-\d{2}$/.test(date)
-
-export function sanitizeDateInput(input: unknown): string {
+export function sanitizeDateInput(input: unknown): Date {
   const raw = typeof input === 'string' ? input.trim() : ''
-  if (isValidDateFormat(raw)) {
-    return raw
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return new Date(`${raw}T00:00:00.000Z`)
   }
 
-  // kalau invalid, kembalikan tanggal hari ini 
-  return new Date().toISOString().split('T')[0]
+  // fallback ke hari ini
+  return new Date()
 }

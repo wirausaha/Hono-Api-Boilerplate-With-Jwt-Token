@@ -17,7 +17,12 @@ route.get('/user/getavatar', verifyAccessToken, async (c) => {
     if (!user || !user.Avatar200x200) {
         return c.json({ error: 'Avatar not found' }, 404)
     }
-    return c.json({ success: true, avatar: user.Avatar200x200 }, 200)
+    const url = new URL(c.req.url)
+    const fullAvatarUrl = `${url.origin}${user.Avatar200x200}`
+    return c.json({
+      success: true,
+      avatar: fullAvatarUrl,
+    })
   } catch (err) {
     console.error('Error /user/useravatar:', err)
     return c.json({ success: false, error: 'Internal server error : getavatar()' }, 500)

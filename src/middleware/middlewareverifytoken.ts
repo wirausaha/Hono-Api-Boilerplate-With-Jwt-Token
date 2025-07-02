@@ -26,7 +26,7 @@ export const verifyAccessToken: MiddlewareHandler = async (c, next) => {
     const errorName = (err as any)?.constructor?.name || (err as any)?.name
 
     if (errorName === 'JwtTokenExpired') {
-      console.warn('Token expired, lanjut ke refresh flow')
+      console.warn('Token expired, bisa lanjut ke refresh flow')
       return c.json({ error: 'Access token expired' }, 401)
     }
 

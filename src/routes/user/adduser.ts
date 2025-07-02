@@ -35,7 +35,7 @@ userAddRoute.post('/user/addnewuser', verifyAccessToken, async (c) => {
         Avatar200x200: '',
         City: (body.city as string)?.slice(0, 20),
         ZipCode: (body.zipCode as string)?.slice(0, 6),
-        DateOfBirth: body.dateOfBirth as string | undefined,
+        DateOfBirth: body.dateOfBirth as string | "20250607",
         IsActive: parseInt(body.isActive as string) || 1,
         IsEmailConfirmed: 0,
         IsPhoneConfirmed: 0,
@@ -122,4 +122,5 @@ userAddRoute.post('/user/addnewuser', verifyAccessToken, async (c) => {
             ? 'Data gagal disimpan'
             : 'Saving data failed' }, 500)
     }
-})
+}) 
+export default userAddRoute

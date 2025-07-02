@@ -9,10 +9,10 @@ import { handleLogoutAllSessions } from './logoutallsession'
 
 const authRoutes = new Hono()
 
-authRoutes.route('/api', registerRoute)
-authRoutes.route('/api', loginRoute)
-authRoutes.route('/api', refreshtokenRoute)
-authRoutes.post('/api/logout', handleLogout)
-authRoutes.post('/api/logout-all-session', verifyAccessToken, handleLogoutAllSessions)
+authRoutes.route('/', registerRoute)
+authRoutes.route('/', loginRoute)
+authRoutes.route('/', refreshtokenRoute)
+authRoutes.post('/logout', handleLogout)
+authRoutes.post('/logout-all-session', verifyAccessToken, handleLogoutAllSessions)
 
 export default authRoutes

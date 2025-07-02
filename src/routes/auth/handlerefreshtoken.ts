@@ -22,7 +22,7 @@ route.post('/refreshtoken', async (c) => {
 
   const userAgent = c.req.header('User-Agent') || ''
   const ipAddress = getClientIp(c);
-
+    console.log(accesstoken, refreshtoken);
   if (typeof accesstoken !== 'string' || !accesstoken.trim()) {
     return c.json({ success: false, error: 'Access token tidak valid atau kosong' }, 400)
   }
