@@ -11,9 +11,10 @@ A backend template built using [Hono](https://hono.dev/), Prisma, Redis, and Pos
 - Route-level role checks for admin/superuser access
 - Redis integration for caching and token rotation
 - Database : Users table & tbsystoken table
-- Routes Added
+- Routes Added (5/7/25)
     - Auth : Register, Login, Logout, LogoutAllSession, RefreshToken
-    - User : Count, MyProfile, UserProfile, ExportToCsv, ExportToXlsx (next ...)
+    - User : Count, MyProfile, UserProfile, ExportToCsv, ExportToXlsx, AddUser, DeleteUser, UpdateUser, 
+             GetUserWithPagination, MyRole, UserRole UserExist, UserNameOrEmailExist 
 
 ## 📦 Tech Stack
 
