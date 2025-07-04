@@ -40,7 +40,7 @@ route.post('/login', async (c) => {
     const isValid = await bcrypt.compare(password, user.Password)
 
     if (!isValid) {
-        console.log("Password/User slah 2" )
+        console.log("Password/User salah" )
         return c.json({ success: false, error: 'Password atau Email/Username salah' }, 401)
     }
 
@@ -49,7 +49,7 @@ route.post('/login', async (c) => {
     const token = jwt.sign(
         { userId: user.UserId, email: user.Email, role: user.UserRole }, // payload
         secret,
-        { expiresIn: '30m' }
+        { expiresIn: '2m' }
     )
 
     const refreshToken = crypto.randomBytes(64).toString('hex');

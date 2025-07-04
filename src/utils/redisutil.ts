@@ -23,3 +23,11 @@ export async function getOrCache<T>(
   console.log('Redis miss:', key)
   return result
 }
+
+/**
+ * Menghapus cache berdasarkan key
+ */
+export async function invalidateCache(key: string): Promise<void> {
+  const deleted = await redis.del(key)
+  console.log(deleted ? `Cache deleted: ${key}` : `Cache not found: ${key}`)
+}

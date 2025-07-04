@@ -1,11 +1,12 @@
 import { camelCaseKey } from '../../helper/camelcase';
+import { getOrCache, invalidateCache } from '../../utils/redisutil'
 import { userDtos, userInputDto } from './../../select/userdtos';
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { verifyAccessToken } from '../../middleware/middlewareverifytoken'
 import { handleFileUpload } from '../../utils/handlefileupload'
 import { getLang } from '../../utils/lang'
-import { UsernameOrEmailExists } from '../../services/userservices'
+import { UsernameOrEmailExists, UserNotExists } from '../../services/userservices'
 import { generateRandomString } from '../../utils/randomstring'
 import { sanitizeDateInput } from '../../helper/sanitizedateinput'
 import prisma from '../../lib/prisma-client'
@@ -14,9 +15,9 @@ import path from 'path'
 
 import { randomInt } from 'crypto';
 
-const userAddRoute = new Hono()
+const userEditRoute = new Hono()
 
-userAddRoute.post('/user/addnewuser', verifyAccessToken, async (c) => {
+userEditRoute.post('/user/updateuser', verifyAccessToken, async (c) => {
 
     const lang = getLang(c) // ambil bahasa dari JWT / header / query
 
@@ -45,40 +46,23 @@ userAddRoute.post('/user/addnewuser', verifyAccessToken, async (c) => {
         AvatarFile: body.avatarFile as File
     }
 
-    // Validasi email, username, password, dll
-    const emailPattern = /^(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]{6,20}(?<![_.])$/
-    const usernamePattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/  // /^[a-zA-Z0-9]+$/
-
-    if (
-        !userData.UserName ||
-        !userData.Email ||
-        !userData.Password ||
-        !emailPattern.test(userData.Email) ||
-        !usernamePattern.test(userData.UserName) ||
-        userData.UserName.length < 6 || userData.UserName.length > 20 ||
-        userData.Password.length < 6 || userData.Password.length > 20 ||
-        userData.Email.length < 11 || userData.Email.length > 100
-    ) {
+    const fakeUpload = (process.env.FAKE_UPLOAD || "1") == "1"
+    let avatarPath: string | null = null
+    console.log(userData.UserName)
+    const user = await prisma.users.findUnique({ where : {UserName: userData.UserName} })
+    if (! user) {
         const message = lang === 'id'
-        ? 'Validasi data gagal. Periksa panjang dan format input.'
-        : 'Validation failed. Please check input length and format.'
+        ? 'Data tidak terdaftar'
+        : 'Data does not exist'
         return c.json({ success: false, message }, 400)
-    }
-
-    const alreadyExists = await UsernameOrEmailExists(userData.UserName, userData.Email)
-    if (alreadyExists) {
-        const message = lang === 'id'
-        ? 'Username atau email sudah digunakan'
-        : 'Username or email already exists'
-        return c.json({ success: false, message }, 400)
+    } else {
+        avatarPath = user.Avatar200x200
     }
 
     // Proses avatar upload jika ada
-    const fakeUpload = (process.env.FAKE_UPLOAD || "1") == "1"
-    let avatarPath: string | null = null
     if (! fakeUpload) {
         if (userData.AvatarFile) {
-            console.log("Avatar tidak null")
+            console.log("Avatar tidak null Hai")
             const result = await handleFileUpload(userData.AvatarFile, {
                 allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
                 maxSizeInKb: 30,
@@ -93,49 +77,48 @@ userAddRoute.post('/user/addnewuser', verifyAccessToken, async (c) => {
             const publicPath = avatarPath.replace(
             path.join(process.cwd(), 'public'), '').replace(/\\/g, '/') // Normalize backslashes for cross-platform compatibility
             avatarPath = publicPath
-            
         }   
     } else {
         const dummyList = ['1.jpg', '2.jpg', '3.jpg', '4.jpg', '5.jpg', '6.jpg']
         avatarPath = `/images/avatars/${dummyList[randomInt(0, dummyList.length - 1)]}`
     }   
 
-    // Simpan user
-    const newUser = {
-        UserId: generateRandomString(36),
-        UserName: userData.UserName,
-        Email: userData.Email,
-        Password: userData.Password,
-        FirstName: userData.FirstName,
-        LastName: userData.LastName,
-        UserRole: userData.UserRole,
-        Address: userData.Address,
-        Address2: userData.Address2,
-        Province: userData.Province,
-        City: userData.City,
-        ZipCode: userData.ZipCode,
-        DateOfBirth: sanitizeDateInput(userData.DateOfBirth),
-        IsActive: userData.IsActive,
-        Avatar200x200: avatarPath,
-        TermsAgrement: 1
-    }
-
     try {
-        const users = await prisma.users.create({data: newUser})
+        await prisma.users.update({
+            where: { UserName: userData.UserName },
+            data: {
+                FirstName: userData.FirstName,
+                LastName: userData.LastName,
+                PhoneNumber: userData.PhoneNumber,
+                Address: userData.Address,
+                Address2: userData.Address2,
+                Province: userData.Province,
+                City: userData.City,
+                ZipCode: userData.ZipCode,
+                DateOfBirth: sanitizeDateInput(userData.DateOfBirth),
+                IsActive: userData.IsActive,
+                Avatar200x200: avatarPath        
+            },
+        })
+        const user = await prisma.users.findUnique({ where : {UserName: userData.UserName} })
         const message = lang === 'id'
             ? 'Data sudah disimpan'
             : 'User saved successfully'
         const url = new URL(c.req.url)
         const baseUrl = url.origin
-        const camel = camelCaseKey(users)
-        delete camel.avatar200x200
-        camel.avatar200x200 = `${baseUrl}${newUser.Avatar200x200?.trim?.() || ''}`
-        return c.json({ success: true, message: message, user: camel })
+        if (user) {
+            await invalidateCache(`profile:${user.UserId}`)
+            const camel = camelCaseKey(user)
+            delete camel.avatar200x200
+            camel.avatar200x200 = `${baseUrl}${user.Avatar200x200?.trim?.() || ''}`
+            return c.json({ success: true, message: message, user: camel })
+        }        
     } catch (err) {
         console.error(err)
-        return c.json({ success: false, error: lang === 'id'
-            ? 'Data gagal disimpan'
-            : 'Saving data failed' }, 500)
     }
+    return c.json({ success: false, error: lang === 'id'
+        ? 'Data gagal disimpan'
+        : 'Saving data failed' }, 500)
+
 }) 
-export default userAddRoute
+export default userEditRoute

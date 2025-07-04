@@ -39,3 +39,9 @@ export type userInputDto = {
   IsPhoneConfirmed: number, 
   AvatarFile: File
 }  
+
+export type changePasswordDto = {
+  userName: string,
+  oldPassword: string,
+  newPassword: string
+}  

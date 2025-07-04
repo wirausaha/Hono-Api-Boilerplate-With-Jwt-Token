@@ -71,3 +71,14 @@ export async function UsernameOrEmailExists(username: string, email: string) {
         return null;
     }  
 }
+
+export async function UserNotExists(username: string, email: string) {
+    try {
+        const userExist = await prisma.users.count({
+              where: { OR: [{ UserName: username }, { Email: email }] }        
+        })
+        return userExist <= 0
+    } catch (err) {
+        return null;
+    }  
+}

@@ -1,8 +1,6 @@
 import { Context } from 'hono'
-import { PrismaClient, User } from '@prisma/client';
+import prisma from '../../lib/prisma-client'
 import { getClientIp } from '../../helper/getclientip';
-
-const prisma = new PrismaClient();
 
 export const handleLogout = async (c: Context) => {
     const body: { accesstoken: string, refreshtoken: string, deviceid?: string } = await c.req.json()   

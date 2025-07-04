@@ -18,24 +18,30 @@ route.post('/refreshtoken', async (c) => {
         rememberme: number
         deviceid?: string
     } = await c.req.json()    
-  const { accesstoken, refreshtoken, rememberme, deviceid } = body
+    const { accesstoken, refreshtoken, rememberme, deviceid } = body
+    
+    console.log("Refresh token called. Access Token : ", accesstoken, " | refresh token : ", refreshtoken);
+    console.log(" ")
+    const userAgent = c.req.header('User-Agent') || ''
+    const ipAddress = getClientIp(c);
 
-  const userAgent = c.req.header('User-Agent') || ''
-  const ipAddress = getClientIp(c);
-    console.log(accesstoken, refreshtoken);
-  if (typeof accesstoken !== 'string' || !accesstoken.trim()) {
-    return c.json({ success: false, error: 'Access token tidak valid atau kosong' }, 400)
-  }
+    if (typeof accesstoken !== 'string' || !accesstoken.trim()) {
+      return c.json({ success: false, error: 'Access token tidak valid atau kosong' }, 400)
+    }
 
 
   try {
     await verify(accesstoken, process.env.JWT_SECRET!)
+    console.log(" ")
+    console.log("Token masih valid ", accesstoken, " | refresh token : ", refreshtoken);
+    console.log(" ")
     return c.json({ success: true, token: accesstoken, refreshtoken: refreshtoken })
   } catch (err) 
   {
     if (err instanceof Error) {
       if (err.name === 'JwtTokenExpired') {
         console.log('Token expired, lanjut ke refresh flow')
+        console.log(" ")
         // lanjutkan proses refresh
       } else {
         console.error('JWT verify error:', err)
@@ -64,23 +70,21 @@ route.post('/refreshtoken', async (c) => {
     return c.json({ success: false, error: 'Token tidak valid atau tidak cocok dengan device ini' }, 401)
   }
 
-  // 3️⃣ Cek apakah refresh token masih berlaku
   const now = new Date()
   if (!token.expiredate || token.expiredate < now) {
     return c.json({ success: false, error: 'Refresh token sudah kadaluarsa, silakan login ulang' }, 403)
   }
 
-  // 4️⃣ Tandai token lama sudah kadaluarsa
   await prisma.tbsystoken.updateMany({
-    where: { id: token.id },
+    where: { userid: token.userid },
     data: { isexpired: 1 }
   })
 
-  // 5️⃣ Buat token baru
+  const secret = process.env.JWT_SECRET || 'fa3b9bc620714a2aa2fa47709850f7e9'
   const newAccessToken = jwt.sign(
-    { userId: token.id, email: token.email, role: token.userrole }, 
-    process.env.JWT_SECRET!,
-    { expiresIn: '30m' }
+    { userId: token.userid, email: token.email, role: token.userrole }, 
+    secret,
+    { expiresIn: '2m' }
   )
 
   const newRefreshToken = crypto.randomBytes(64).toString('hex')
@@ -100,8 +104,8 @@ route.post('/refreshtoken', async (c) => {
       email: token.email
     }
   })
-  console.log("token: ", newAccessToken)
-  console.log("refresh token: ", newRefreshToken)
+  console.log("New token: ", newAccessToken)
+  console.log("New refresh token: ", newRefreshToken)
 
   return c.json({ success: true, token: newAccessToken, refreshtoken: newRefreshToken })
 }) 
